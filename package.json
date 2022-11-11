@@ -3,11 +3,11 @@
   "title": "React Native Cf Amap",
   "version": "1.0.0",
   "description": "TODO",
-  "main": "index.js",
+  "main": "index.ts",
   "files": [
     "README.md",
     "android",
-    "index.js",
+    "index.ts",
     "ios",
     "react-native-cf-amap.podspec"
   ],

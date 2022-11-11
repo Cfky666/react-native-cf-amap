@@ -36,5 +36,5 @@ repositories {
 dependencies {
     implementation "com.facebook.react:react-native:${safeExtGet("reactNative", "+")}" // from node_modules
     //搜索功能
-//    implementation 'com.amap.api:search:latest.integration'
+    implementation 'com.amap.api:search:latest.integration'
 }

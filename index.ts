@@ -3,12 +3,15 @@
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import { useEffect, useState } from "react";
 
-const { CfGaode } = NativeModules;
+const { CfAmap } = NativeModules;
 
-export default CfGaode;
+export default CfAmap;
 
+export function initAMapSearch(){
+  CfAmap.initAMapSearch(()=>{});
+}
 export function poiSearchKeyWord({keyWord='',city=''}:{keyWord:string,city:string}){
-  CfGaode.poiSearchKeyWord(keyWord,city)
+  CfAmap.poiSearchKeyWord(keyWord,city)
 }
 
 export function useGaodeEmitter(){
