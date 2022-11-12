@@ -1,6 +1,6 @@
 // main index.js
 
-import { NativeEventEmitter, NativeModules } from 'react-native';
+import {NativeEventEmitter, NativeModules, Platform} from 'react-native';
 import { useEffect, useState } from "react";
 
 const { CfAmap } = NativeModules;
@@ -8,7 +8,9 @@ const { CfAmap } = NativeModules;
 export default CfAmap;
 
 export function initAMapSearch(){
-  CfAmap.initAMapSearch(()=>{});
+  CfAmap.initAMapSearch((res:any)=>{
+    console.log('result:',res)
+  });
 }
 export function poiSearchKeyWord({keyWord='',city=''}:{keyWord:string,city:string}){
   CfAmap.poiSearchKeyWord(keyWord,city)
@@ -19,7 +21,11 @@ export function useAMapPoiSearchEmitter(){
   useEffect(()=>{
     const eventEmitter = new NativeEventEmitter(CfAmap);
     const eventListener = eventEmitter.addListener('onPoiSearched', (event) => {
-      setPoiSearch(JSON.parse(event.result || '[]'))
+      if(Platform.OS === 'ios'){
+        setPoiSearch(event.result || []);
+      }else {
+        setPoiSearch(JSON.parse(event.result || '[]'));
+      }
     });
     return(()=>{
       eventListener && eventListener.remove();

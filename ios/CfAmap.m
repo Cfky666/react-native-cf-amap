@@ -18,54 +18,52 @@ RCT_EXPORT_METHOD(sampleMethod:(NSString *)stringArgument numberParameter:(nonnu
 
 
 
-RCT_EXPORT_METHOD(initAMapSearch:(RCTPromiseResolveBlock)resolve)
+RCT_EXPORT_METHOD(initAMapSearch:(RCTResponseSenderBlock)callback)
 {
     NSLog(@"initAMapSearch");
     self.search = [[AMapSearchAPI alloc] init];
     self.search.delegate = self;
+    callback(@[[NSNull null], @"success"]);
 }
 
 RCT_EXPORT_METHOD(poiSearchKeyWord:(NSString *)keyWord city:(nonnull NSString *)city)
 {
-    
-    NSLog(@"poiSearchKeyWord");
+   
     AMapPOIKeywordsSearchRequest *request = [[AMapPOIKeywordsSearchRequest alloc] init];
         
     request.keywords        = keyWord;
     request.city                = city;
     request.types               = @"";
+//    NSLog(@"poiSearchKeyWord%@",request);
+
     [self.search AMapPOIKeywordsSearch:request];
 
-    /*  搜索SDK 3.2.0 中新增加的功能，只搜索本城市的POI。*/
-//    request.cityLimit           = YES;
-//    request.requireSubPOIs      = YES;
- //    request.requireExtension    = YES;
 }
 
 
 /* POI 搜索回调. */
 - (void)onPOISearchDone:(AMapPOISearchBaseRequest *)request response:(AMapPOISearchResponse *)response
 {
-    NSLog(@"onPOISearchDone%@",response);
+    
+//    NSLog(@"onPOISearchDone%@",response.pois);
 
     if (response.pois.count == 0)
     {
+        NSArray *result = [NSArray array];
+        [self sendEventWithName:@"onPoiSearched" body: @{@"result":result}];
         return;
     }
-//    sendEventToJs("onPoiSearched", pois.toString());
-//    NSString *a =@"name";
-//    [self sendEventWithName:@"onPoiSearched" body:@{@"poiSearched": @"a"}];
-//    NSArray *dictArray = [AMapPOI mj_keyValuesArrayWithObjectArray : response.pois];
 
-    [self sendEventWithName:@"onPoiSearched" body: response.pois];
+    NSArray *result = [AMapPOI mj_keyValuesArrayWithObjectArray:response.pois];
+    [self sendEventWithName:@"onPoiSearched" body: @{@"result":result}];
 
-
-    //解析response获取POI信息，具体解析见 Demo
 }
 
-
+/**
+ 支持的发送事件
+ */
 - (NSArray<NSString *> *)supportedEvents{
-    return @[@"onPOISearchDone"];
+    return @[@"onPoiSearched"];
 }
 
 
