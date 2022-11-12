@@ -2,14 +2,39 @@
 
 package com.reactlibrary;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Base64;
+import android.util.Log;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+
+import com.amap.api.services.core.AMapException;
+import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.core.PoiItemV2;
+import com.amap.api.services.geocoder.GeocodeResult;
+import com.amap.api.services.geocoder.GeocodeSearch;
+import com.amap.api.services.geocoder.RegeocodeQuery;
+import com.amap.api.services.geocoder.RegeocodeResult;
+import com.amap.api.services.poisearch.PoiResultV2;
+import com.amap.api.services.poisearch.PoiSearchV2;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.google.gson.Gson;
 
-public class CfAmapModule extends ReactContextBaseJavaModule {
+import java.util.ArrayList;
+
+public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearchV2.OnPoiSearchListener, GeocodeSearch.OnGeocodeSearchListener{
 
     private final ReactApplicationContext reactContext;
+    private String TAG = "CfAmapModule";
 
     public CfAmapModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -27,82 +52,109 @@ public class CfAmapModule extends ReactContextBaseJavaModule {
         callback.invoke("Received numberArgument: " + numberArgument + " stringArgument: " + stringArgument);
     }
 
-//
-//    public void sendEventToJs(String eventName,Object obj){
-//        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName,obj);
-//    }
-//
-//
-//    /**
-//     * 根据key值搜索地址信息
-//     * @param keyWord
-//     * @param city
-//     */
-//    @ReactMethod
-//    public void poiSearchKeyWord(String keyWord,String city) {
-//        PoiSearchV2.Query query = new PoiSearchV2.Query(keyWord, "", city);
-//        query.setPageSize(60);// 设置每页最多返回多少条poiitem
-//        query.setPageNum(0);//设置查询页码
-//        PoiSearchV2 poiSearch = null;
-//        try {
-//            poiSearch = new PoiSearchV2(reactContext, query);
-//            poiSearch.setOnPoiSearchListener(this);
-//            poiSearch.searchPOIAsyn();
-//        } catch (AMapException e) {
-//            e.printStackTrace();
-//        }
-//
-////        callback.invoke("Received numberArgument: " + numberArgument + " stringArgument: " + stringArgument);
-//    }
-//
-//    /**
-//     * 坐标地址查询
-//     */
-//    @ReactMethod
-//    private void searchLocation(double latitude,double longitude) {
-//        GeocodeSearch mGeocoderSearch = null;
-//        try {
-//            mGeocoderSearch = new GeocodeSearch(reactContext);
-//            LatLonPoint point = new LatLonPoint(latitude,longitude);
-//            RegeocodeQuery query = new RegeocodeQuery(point, 200, GeocodeSearch.AMAP);
-//            mGeocoderSearch.getFromLocationAsyn(query);
-//        } catch (AMapException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-//
-//
-//    @Override
-//    public void onPoiSearched(PoiResultV2 poiResultV2, int i) {
-//        if (i == 1000) {
-//            ArrayList<PoiItemV2> pois = poiResultV2.getPois();
-//            Log.e(TAG,"onPoiSearched:"+pois.toString());
-//            if (pois.size() > 0) {
-//                sendEventToJs("onPoiSearched", pois.toString());
-//
-//            } else {
-//
-//            }
-//        } else {
-//            Toast.makeText( reactContext, "获取地址信息失败(" + i + ")",Toast.LENGTH_SHORT);
-//        }
-//    }
-//
-//    @Override
-//    public void onPoiItemSearched(PoiItemV2 poiItemV2, int i) {
-//        Log.e(TAG,"onPoiItemSearched:"+i);
-//    }
-//
-//    @Override
-//    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
-//        Log.e(TAG,"onRegeocodeSearched:"+i);
-//
-//    }
-//
-//    @Override
-//    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
-//        Log.e(TAG,"onGeocodeSearched:"+i);
-//    }
+    private void sendEvent(ReactContext reactContext,
+                           String eventName,
+                           @Nullable WritableMap params) {
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
+    }
+
+    /**
+     * 根据key值搜索地址信息
+     * @param keyWord
+     * @param city
+     */
+    @ReactMethod
+    public void poiSearchKeyWord(String keyWord,String city) {
+        PoiSearchV2.Query query = new PoiSearchV2.Query(keyWord, "", city);
+        query.setPageSize(20);// 设置每页最多返回多少条poiitem
+        query.setPageNum(0);//设置查询页码
+        PoiSearchV2 poiSearch = null;
+        try {
+            poiSearch = new PoiSearchV2(reactContext, query);
+            poiSearch.setOnPoiSearchListener(this);
+            poiSearch.searchPOIAsyn();
+        } catch (AMapException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 坐标地址查询
+     */
+    @ReactMethod
+    private void searchLocation(double latitude,double longitude) {
+        GeocodeSearch mGeocoderSearch = null;
+        try {
+            mGeocoderSearch = new GeocodeSearch(reactContext);
+            LatLonPoint point = new LatLonPoint(latitude,longitude);
+            RegeocodeQuery query = new RegeocodeQuery(point, 200, GeocodeSearch.AMAP);
+            mGeocoderSearch.getFromLocationAsyn(query);
+        } catch (AMapException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String object2String(Parcelable stu) {
+        // 1.序列化
+        Parcel p = Parcel.obtain();
+        stu.writeToParcel(p, 0);
+        byte[] bytes = p.marshall();
+        p.recycle();
+
+        // 2.编码
+        String str = Base64.encodeToString(bytes, Base64.DEFAULT);
+        return str;
+    }
+
+    /**
+     * poi结果返回
+     * @param poiResultV2
+     * @param i
+     */
+    @Override
+    public void onPoiSearched(PoiResultV2 poiResultV2, int i) {
+        if (i == 1000) {
+            ArrayList<PoiItemV2> pois = poiResultV2.getPois();
+            if (pois.size() > 0) {
+                Log.e(TAG,"onPoiSearched:"+pois);
+                WritableMap params = Arguments.createMap();
+                params.putString("result", new Gson().toJson(pois));
+                sendEvent(reactContext, "onPoiSearched", params);
+            } else {
+                WritableMap params = Arguments.createMap();
+                params.putString("result", "[]");
+                sendEvent(reactContext, "onPoiSearched", params);
+            }
+        } else {
+            Toast.makeText( reactContext, "获取地址信息失败(" + i + ")", Toast.LENGTH_SHORT);
+        }
+    }
+
+    @Override
+    public void onPoiItemSearched(PoiItemV2 poiItemV2, int i) {
+        Log.e(TAG,"onPoiItemSearched:"+i);
+    }
+
+    @Override
+    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
+        Log.e(TAG,"onRegeocodeSearched:"+i);
+
+    }
+
+    @Override
+    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+        Log.e(TAG,"onGeocodeSearched:"+i);
+    }
+
+    @ReactMethod
+    public void addListener(String eventName) {
+        // Set up any upstream listeners or background tasks as necessary
+    }
+    @ReactMethod
+    public void removeListeners(Integer count) {
+        // Remove upstream listeners, stop unnecessary background tasks
+    }
 
 }

@@ -14,13 +14,12 @@ export function poiSearchKeyWord({keyWord='',city=''}:{keyWord:string,city:strin
   CfAmap.poiSearchKeyWord(keyWord,city)
 }
 
-export function useGaodeEmitter(){
+export function useAMapPoiSearchEmitter(){
   const [poiSearch,setPoiSearch] = useState<any>();
   useEffect(()=>{
-    const eventEmitter = new NativeEventEmitter(NativeModules.ToastExample);
+    const eventEmitter = new NativeEventEmitter(CfAmap);
     const eventListener = eventEmitter.addListener('onPoiSearched', (event) => {
-      console.log("onPoiSearched::",event.eventProperty) // "someValue"
-      setPoiSearch(event.eventProperty)
+      setPoiSearch(JSON.parse(event.result || '[]'))
     });
     return(()=>{
       eventListener && eventListener.remove();
