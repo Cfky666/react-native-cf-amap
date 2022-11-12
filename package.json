@@ -1,8 +1,8 @@
 {
   "name": "react-native-cf-amap",
   "title": "React Native Cf Amap",
-  "version": "1.0.0",
-  "description": "TODO",
+  "version": "0.0.1",
+  "description": "成丰高德搜索组件库",
   "main": "index.ts",
   "files": [
     "README.md",
@@ -20,11 +20,14 @@
     "baseUrl": "https://github.com/github_account/react-native-cf-amap"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "amap",
+    "gaode",
+    "search"
   ],
   "author": {
-    "name": "Your Name",
-    "email": "yourname@email.com"
+    "name": "Richard",
+    "email": "liuqiang@cfhy.com"
   },
   "license": "MIT",
   "licenseFilename": "LICENSE",
