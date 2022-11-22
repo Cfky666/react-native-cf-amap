@@ -8,6 +8,8 @@
 
 @implementation CfAmap
 
+static NSString *SearchType = @"";
+
 RCT_EXPORT_MODULE()
 
 RCT_EXPORT_METHOD(sampleMethod:(NSString *)stringArgument numberParameter:(nonnull NSNumber *)numberArgument callback:(RCTResponseSenderBlock)callback)
@@ -28,7 +30,8 @@ RCT_EXPORT_METHOD(initAMapSearch:(RCTResponseSenderBlock)callback)
 
 RCT_EXPORT_METHOD(poiSearchKeyWord:(NSString *)keyWord city:(nonnull NSString *)city)
 {
-   
+    SearchType = @"poiSearchKeyWord";
+
     AMapPOIKeywordsSearchRequest *request = [[AMapPOIKeywordsSearchRequest alloc] init];
         
     request.keywords        = keyWord;
@@ -41,21 +44,49 @@ RCT_EXPORT_METHOD(poiSearchKeyWord:(NSString *)keyWord city:(nonnull NSString *)
 }
 
 
+RCT_EXPORT_METHOD(poiSearchBound:(double *)latitude longitude:(nonnull double *)longitude)
+{
+    SearchType = @"searchLocation";
+ 
+
+//    AMapPOIKeywordsSearchRequest *request = [[AMapPOIKeywordsSearchRequest alloc] init];
+    AMapPOIAroundSearchRequest *request = [[AMapPOIAroundSearchRequest alloc] init];
+    request.location            = [AMapGeoPoint locationWithLatitude:*latitude longitude:*longitude];
+    request.keywords            = @"";
+    /* 按照距离排序. */
+//    request.sortrule            = 0;
+    request.radius = 1000;
+    request.keywords = @"";
+//    request.requireExtension    = YES;
+    NSLog(@"request%@",request);
+    [self.search AMapPOIAroundSearch:request];
+
+}
+
+
 /* POI 搜索回调. */
 - (void)onPOISearchDone:(AMapPOISearchBaseRequest *)request response:(AMapPOISearchResponse *)response
 {
-    
-//    NSLog(@"onPOISearchDone%@",response.pois);
+    NSLog(@"onPOISearchDone%@",SearchType);
+    NSLog(@"onPOISearchDone%@",response.pois);
 
     if (response.pois.count == 0)
     {
         NSArray *result = [NSArray array];
-        [self sendEventWithName:@"onPoiSearched" body: @{@"result":result}];
+        if([@"poiSearchKeyWord" isEqual: SearchType]){
+            [self sendEventWithName:@"onPoiSearched" body: @{@"result":result}];
+        }else{
+            [self sendEventWithName:@"onPoiSearchBound" body: @{@"result":result}];
+        }
         return;
     }
 
     NSArray *result = [AMapPOI mj_keyValuesArrayWithObjectArray:response.pois];
-    [self sendEventWithName:@"onPoiSearched" body: @{@"result":result}];
+    if([@"poiSearchKeyWord" isEqual: SearchType]){
+        [self sendEventWithName:@"onPoiSearched" body: @{@"result":result}];
+    }else{
+        [self sendEventWithName:@"onPoiSearchBound" body: @{@"result":result}];
+    }
 
 }
 
@@ -63,7 +94,7 @@ RCT_EXPORT_METHOD(poiSearchKeyWord:(NSString *)keyWord city:(nonnull NSString *)
  支持的发送事件
  */
 - (NSArray<NSString *> *)supportedEvents{
-    return @[@"onPoiSearched"];
+    return @[@"onPoiSearched",@"onPoiSearchBound"];
 }
 
 

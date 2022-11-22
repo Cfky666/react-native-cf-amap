@@ -4,6 +4,7 @@ package com.reactlibrary;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
@@ -35,6 +36,7 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
 
     private final ReactApplicationContext reactContext;
     private String TAG = "CfAmapModule";
+    private String TypeFlag = "";
 
     public CfAmapModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -67,12 +69,31 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
      */
     @ReactMethod
     public void poiSearchKeyWord(String keyWord,String city) {
+        TypeFlag = "poiSearchKeyWord";
         PoiSearchV2.Query query = new PoiSearchV2.Query(keyWord, "", city);
         query.setPageSize(20);// 设置每页最多返回多少条poiitem
         query.setPageNum(0);//设置查询页码
         PoiSearchV2 poiSearch = null;
         try {
             poiSearch = new PoiSearchV2(reactContext, query);
+            poiSearch.setOnPoiSearchListener(this);
+            poiSearch.searchPOIAsyn();
+        } catch (AMapException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @ReactMethod
+    public void poiSearchBound(double latitude,double longitude) {
+        TypeFlag = "poiSearchBound";
+        PoiSearchV2.Query query = new PoiSearchV2.Query("","");
+//        query.setPageSize(20);// 设置每页最多返回多少条poiitem
+//        query.setPageNum(0);//设置查询页码
+        PoiSearchV2 poiSearch = null;
+        try {
+            poiSearch = new PoiSearchV2(reactContext, query);
+            poiSearch.setBound(new PoiSearchV2.SearchBound(new LatLonPoint(latitude,longitude), 1000));//设置周边搜索的中心点以及半径
             poiSearch.setOnPoiSearchListener(this);
             poiSearch.searchPOIAsyn();
         } catch (AMapException e) {
@@ -115,17 +136,27 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
      */
     @Override
     public void onPoiSearched(PoiResultV2 poiResultV2, int i) {
+//        Log.e(TAG,"onPoiSearched:"+i);
         if (i == 1000) {
             ArrayList<PoiItemV2> pois = poiResultV2.getPois();
             if (pois.size() > 0) {
                 Log.e(TAG,"onPoiSearched:"+pois);
                 WritableMap params = Arguments.createMap();
                 params.putString("result", new Gson().toJson(pois));
-                sendEvent(reactContext, "onPoiSearched", params);
+                if(TextUtils.equals(TypeFlag,"poiSearchKeyWord")){
+                    sendEvent(reactContext, "onPoiSearched", params);
+                }else if(TextUtils.equals(TypeFlag,"poiSearchBound")){
+                    sendEvent(reactContext, "onPoiSearchBound", params);
+                }
+
             } else {
                 WritableMap params = Arguments.createMap();
                 params.putString("result", "[]");
-                sendEvent(reactContext, "onPoiSearched", params);
+                if(TextUtils.equals(TypeFlag,"poiSearchKeyWord")){
+                    sendEvent(reactContext, "onPoiSearched", params);
+                }else if(TextUtils.equals(TypeFlag,"poiSearchBound")){
+                    sendEvent(reactContext, "onPoiSearchBound", params);
+                }
             }
         } else {
             Toast.makeText( reactContext, "获取地址信息失败(" + i + ")", Toast.LENGTH_SHORT);
