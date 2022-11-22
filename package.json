@@ -1,7 +1,7 @@
 {
   "name": "react-native-cf-amap",
   "title": "React Native Cf Amap",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "成丰高德搜索组件库",
   "main": "index.ts",
   "files": [
