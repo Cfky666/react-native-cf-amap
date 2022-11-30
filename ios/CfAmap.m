@@ -33,7 +33,7 @@ RCT_EXPORT_METHOD(poiSearchKeyWord:(NSString *)keyWord city:(nonnull NSString *)
     SearchType = @"poiSearchKeyWord";
 
     AMapPOIKeywordsSearchRequest *request = [[AMapPOIKeywordsSearchRequest alloc] init];
-        
+
     request.keywords        = keyWord;
     request.city                = city;
     request.types               = @"";
@@ -43,25 +43,28 @@ RCT_EXPORT_METHOD(poiSearchKeyWord:(NSString *)keyWord city:(nonnull NSString *)
 
 }
 
-
-RCT_EXPORT_METHOD(poiSearchBound:(double *)latitude longitude:(nonnull double *)longitude)
+RCT_EXPORT_METHOD(poiSearchBound:(NSString *)latitude longitude:(nonnull NSString *)longitude)
 {
     SearchType = @"searchLocation";
- 
+
+    float lat = [latitude floatValue];
+    float lon = [longitude floatValue];
 
 //    AMapPOIKeywordsSearchRequest *request = [[AMapPOIKeywordsSearchRequest alloc] init];
     AMapPOIAroundSearchRequest *request = [[AMapPOIAroundSearchRequest alloc] init];
-    request.location            = [AMapGeoPoint locationWithLatitude:*latitude longitude:*longitude];
+    NSLog(@"latitude :%f,longitude: %f",lat, lon);
+    request.location            = [AMapGeoPoint locationWithLatitude:lat longitude:lon];
     request.keywords            = @"";
     /* 按照距离排序. */
-//    request.sortrule            = 0;
+    request.sortrule            = 0;
     request.radius = 1000;
-    request.keywords = @"";
+//    request.keywords = @"";
 //    request.requireExtension    = YES;
     NSLog(@"request%@",request);
     [self.search AMapPOIAroundSearch:request];
 
 }
+
 
 
 /* POI 搜索回调. */

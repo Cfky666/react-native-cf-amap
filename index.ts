@@ -28,7 +28,8 @@ export function poiSearchKeyWord({keyWord='',city=''}:{keyWord:string,city:strin
  * @param longitude
  */
 export function poiSearchBound({latitude,longitude}:{latitude:number;longitude:number;}){
-  CfAmap.poiSearchBound(latitude,longitude)
+  const isIos = Platform.OS==="ios";
+  CfAmap.poiSearchBound(isIos? latitude+"":latitude,isIos?longitude+"":longitude)
 }
 
 export function usePoiSearchBoundEmitter() {
