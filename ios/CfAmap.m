@@ -57,7 +57,7 @@ RCT_EXPORT_METHOD(poiSearchBound:(NSString *)latitude longitude:(nonnull NSStrin
     request.keywords            = @"";
     /* 按照距离排序. */
     request.sortrule            = 0;
-    request.radius = 1000;
+    request.radius = 5000;
 //    request.keywords = @"";
 //    request.requireExtension    = YES;
     NSLog(@"request%@",request);

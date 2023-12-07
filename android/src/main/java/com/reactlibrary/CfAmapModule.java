@@ -93,7 +93,7 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
         PoiSearchV2 poiSearch = null;
         try {
             poiSearch = new PoiSearchV2(reactContext, query);
-            poiSearch.setBound(new PoiSearchV2.SearchBound(new LatLonPoint(latitude,longitude), 1000));//设置周边搜索的中心点以及半径
+            poiSearch.setBound(new PoiSearchV2.SearchBound(new LatLonPoint(latitude,longitude), 5000));//设置周边搜索的中心点以及半径
             poiSearch.setOnPoiSearchListener(this);
             poiSearch.searchPOIAsyn();
         } catch (AMapException e) {
