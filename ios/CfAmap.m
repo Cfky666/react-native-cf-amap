@@ -65,7 +65,17 @@ RCT_EXPORT_METHOD(poiSearchBound:(NSString *)latitude longitude:(nonnull NSStrin
 
 }
 
+RCT_EXPORT_METHOD(getAddressByLatlng:(NSString *)latitude longitude:(nonnull NSString *)longitude)
+{
 
+    double lat = [latitude floatValue];
+    double lon = [longitude floatValue];
+    // 创建逆地理编码请求
+        AMapReGeocodeSearchRequest *request = [[AMapReGeocodeSearchRequest alloc] init];
+        request.location = [AMapGeoPoint locationWithLatitude:lat longitude:lon];
+    // 发起逆地理编码请求
+    [self.search AMapReGoecodeSearch:request];
+}
 
 /* POI 搜索回调. */
 - (void)onPOISearchDone:(AMapPOISearchBaseRequest *)request response:(AMapPOISearchResponse *)response
@@ -90,14 +100,19 @@ RCT_EXPORT_METHOD(poiSearchBound:(NSString *)latitude longitude:(nonnull NSStrin
     }else{
         [self sendEventWithName:@"onPoiSearchBound" body: @{@"result":result}];
     }
+}
 
+- (void)onReGeocodeSearchDone:(AMapReGeocodeSearchRequest *)request response:(AMapReGeocodeSearchResponse *)response{
+    if (response.regeocode != nil) {
+        [self sendEventWithName:@"onReGeocodeSearched" body: @{@"result":response.regeocode.mj_keyValues}];
+    }
 }
 
 /**
  支持的发送事件
  */
 - (NSArray<NSString *> *)supportedEvents{
-    return @[@"onPoiSearched",@"onPoiSearchBound"];
+    return @[@"onPoiSearched",@"onPoiSearchBound",@"onReGeocodeSearched"];
 }
 
 

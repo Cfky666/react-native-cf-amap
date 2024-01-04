@@ -21,6 +21,7 @@ import com.amap.api.services.geocoder.RegeocodeResult;
 import com.amap.api.services.poisearch.PoiResultV2;
 import com.amap.api.services.poisearch.PoiSearchV2;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -32,7 +33,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearchV2.OnPoiSearchListener, GeocodeSearch.OnGeocodeSearchListener{
+public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearchV2.OnPoiSearchListener, GeocodeSearch.OnGeocodeSearchListener {
 
     private final ReactApplicationContext reactContext;
     private String TAG = "CfAmapModule";
@@ -64,11 +65,12 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
 
     /**
      * 根据key值搜索地址信息
+     *
      * @param keyWord
      * @param city
      */
     @ReactMethod
-    public void poiSearchKeyWord(String keyWord,String city) {
+    public void poiSearchKeyWord(String keyWord, String city) {
         TypeFlag = "poiSearchKeyWord";
         PoiSearchV2.Query query = new PoiSearchV2.Query(keyWord, "", city);
         query.setPageSize(20);// 设置每页最多返回多少条poiitem
@@ -85,9 +87,9 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
 
 
     @ReactMethod
-    public void poiSearchBound(double latitude,double longitude) {
+    public void poiSearchBound(double latitude, double longitude) {
         TypeFlag = "poiSearchBound";
-        PoiSearchV2.Query query = new PoiSearchV2.Query("","");
+        PoiSearchV2.Query query = new PoiSearchV2.Query("", "");
 //        query.setPageSize(20);// 设置每页最多返回多少条poiitem
 //        query.setPageNum(0);//设置查询页码
         PoiSearchV2 poiSearch = null;
@@ -105,17 +107,37 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
      * 坐标地址查询
      */
     @ReactMethod
-    private void searchLocation(double latitude,double longitude) {
+    private void searchLocation(double latitude, double longitude) {
         GeocodeSearch mGeocoderSearch = null;
         try {
             mGeocoderSearch = new GeocodeSearch(reactContext);
-            LatLonPoint point = new LatLonPoint(latitude,longitude);
+            LatLonPoint point = new LatLonPoint(latitude, longitude);
             RegeocodeQuery query = new RegeocodeQuery(point, 200, GeocodeSearch.AMAP);
             mGeocoderSearch.getFromLocationAsyn(query);
         } catch (AMapException e) {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 通过经纬度逆地理编码得到位置
+     * @param latitude
+     * @param longitude
+     */
+    @ReactMethod
+    private void getAddressByLatlng(double latitude, double longitude) {
+        try {
+            GeocodeSearch geocodeSearch = new GeocodeSearch(reactContext);
+            geocodeSearch.setOnGeocodeSearchListener(this);
+            LatLonPoint latLng = new LatLonPoint(latitude, longitude);
+            //第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
+            RegeocodeQuery query = new RegeocodeQuery(latLng, 200, GeocodeSearch.AMAP);
+            geocodeSearch.getFromLocationAsyn(query);
+        } catch (AMapException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private String object2String(Parcelable stu) {
         // 1.序列化
@@ -131,6 +153,7 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
 
     /**
      * poi结果返回
+     *
      * @param poiResultV2
      * @param i
      */
@@ -140,49 +163,58 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
         if (i == 1000) {
             ArrayList<PoiItemV2> pois = poiResultV2.getPois();
             if (pois.size() > 0) {
-                Log.e(TAG,"onPoiSearched:"+pois);
+                Log.e(TAG, "onPoiSearched:" + pois);
                 WritableMap params = Arguments.createMap();
                 params.putString("result", new Gson().toJson(pois));
-                if(TextUtils.equals(TypeFlag,"poiSearchKeyWord")){
+                if (TextUtils.equals(TypeFlag, "poiSearchKeyWord")) {
                     sendEvent(reactContext, "onPoiSearched", params);
-                }else if(TextUtils.equals(TypeFlag,"poiSearchBound")){
+                } else if (TextUtils.equals(TypeFlag, "poiSearchBound")) {
                     sendEvent(reactContext, "onPoiSearchBound", params);
                 }
 
             } else {
                 WritableMap params = Arguments.createMap();
                 params.putString("result", "[]");
-                if(TextUtils.equals(TypeFlag,"poiSearchKeyWord")){
+                if (TextUtils.equals(TypeFlag, "poiSearchKeyWord")) {
                     sendEvent(reactContext, "onPoiSearched", params);
-                }else if(TextUtils.equals(TypeFlag,"poiSearchBound")){
+                } else if (TextUtils.equals(TypeFlag, "poiSearchBound")) {
                     sendEvent(reactContext, "onPoiSearchBound", params);
                 }
             }
         } else {
-            Toast.makeText( reactContext, "获取地址信息失败(" + i + ")", Toast.LENGTH_SHORT);
+            Toast.makeText(reactContext, "获取地址信息失败(" + i + ")", Toast.LENGTH_SHORT);
         }
     }
 
     @Override
     public void onPoiItemSearched(PoiItemV2 poiItemV2, int i) {
-        Log.e(TAG,"onPoiItemSearched:"+i);
+        Log.e(TAG, "onPoiItemSearched:" + i);
     }
 
     @Override
     public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
-        Log.e(TAG,"onRegeocodeSearched:"+i);
+//        Log.e("获取地址开始===", i + "=====" + regeocodeResult.getRegeocodeAddress().getFormatAddress());
+        if (i == 1000) {
+            Log.e(TAG, "地址回掉::" + regeocodeResult.getRegeocodeAddress().getFormatAddress());
+            WritableMap params = Arguments.createMap();
+            params.putString("result", regeocodeResult.getRegeocodeAddress().getFormatAddress());
+            sendEvent(reactContext, "onReGeocodeSearched", params);
+        } else {
+            Log.e(TAG, "地址查询失败::");
+        }
 
     }
 
     @Override
     public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
-        Log.e(TAG,"onGeocodeSearched:"+i);
+        Log.e(TAG, "onGeocodeSearched:" + i);
     }
 
     @ReactMethod
     public void addListener(String eventName) {
         // Set up any upstream listeners or background tasks as necessary
     }
+
     @ReactMethod
     public void removeListeners(Integer count) {
         // Remove upstream listeners, stop unnecessary background tasks
