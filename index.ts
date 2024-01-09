@@ -62,9 +62,12 @@ export function useReGeocodeBoundEmitter() {
     const eventListener = eventEmitter.addListener("onReGeocodeSearched", (event) => {
       if (Platform.OS === "ios") {
         // console.log("event.result::::::::",event.result)
-        setReGeocode(event.result?.formattedAddress  || "");
+        // setReGeocode(event.result?.formattedAddress  || "");
+        setReGeocode({address: event.result?.formattedAddress || "",adcode:event.result?.addressComponent?.adcode??'' });
       } else {
-        setReGeocode(event.result || "");
+        // console.log("android event.result::::::::",event)
+
+        setReGeocode({address: event.formattedAddress || "",adcode:event.adCode});
       }
     });
     return (() => {

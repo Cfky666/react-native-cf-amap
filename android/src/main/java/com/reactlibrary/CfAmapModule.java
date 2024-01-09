@@ -197,7 +197,10 @@ public class CfAmapModule extends ReactContextBaseJavaModule implements PoiSearc
         if (i == 1000) {
             Log.e(TAG, "地址回掉::" + regeocodeResult.getRegeocodeAddress().getFormatAddress());
             WritableMap params = Arguments.createMap();
-            params.putString("result", regeocodeResult.getRegeocodeAddress().getFormatAddress());
+            params.putString("formattedAddress", regeocodeResult.getRegeocodeAddress().getFormatAddress());
+            params.putString("adCode", regeocodeResult.getRegeocodeAddress().getAdCode());
+            params.putString("cityCode", regeocodeResult.getRegeocodeAddress().getCityCode());
+            params.putString("townCode", regeocodeResult.getRegeocodeAddress().getTowncode());
             sendEvent(reactContext, "onReGeocodeSearched", params);
         } else {
             Log.e(TAG, "地址查询失败::");
