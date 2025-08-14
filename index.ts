@@ -65,7 +65,7 @@ export function useReGeocodeBoundEmitter() {
                 // setReGeocode(event.result?.formattedAddress  || "");
                 setReGeocode({
                     address: event.result?.formattedAddress || "",
-                    adcode: event.result?.addressComponent?.addressComponent?.adcode ?? '',
+                    adcode: event.result?.addressComponent?.adcode ?? '',
                     province: event.result?.addressComponent?.province,
                     city: event.result?.addressComponent?.city,
                     district: event.result?.addressComponent?.district
